@@ -2,6 +2,7 @@ package tw
 
 import (
 	"net/url"
+	"strings"
 
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
@@ -51,6 +52,9 @@ func Favorite(conf TwitterConfig) error {
 
 		for _, status := range search.Statuses {
 			if err := validateTweet(client, status); err != nil {
+				if isBlockedError(err) {
+					continue
+				}
 				return errors.Wrap(err, "failed to favorite tweet")
 			}
 		}
@@ -91,4 +95,8 @@ func validateTweet(client *twitter.Client, tweet twitter.Tweet) error {
 	log.WithField("tweet", tweet).Infof("favorite")
 
 	return nil
+}
+
+func isBlockedError(err error) bool {
+	return strings.Contains(err.Error(), "You have been blocked from the author of this tweet.")
 }
