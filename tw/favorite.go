@@ -55,7 +55,7 @@ func Favorite(conf TwitterConfig) error {
 				if isBlockedError(err) {
 					continue
 				}
-				return errors.Wrap(err, "failed to favorite tweet")
+				return errors.Wrapf(err, "failed to favorite tweet. %+v", status)
 			}
 		}
 	}
