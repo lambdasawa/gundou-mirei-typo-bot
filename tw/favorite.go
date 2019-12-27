@@ -25,8 +25,6 @@ type (
 )
 
 func Favorite(conf TwitterConfig) error {
-	log.WithField("conf", conf).Info("config")
-
 	client := twitter.NewClient(
 		oauth1.
 			NewConfig(conf.ConsumerKey, conf.ConsumerSecret).
@@ -48,7 +46,6 @@ func Favorite(conf TwitterConfig) error {
 		if err != nil {
 			return errors.Wrap(err, "failed to call search API")
 		}
-		log.WithFields(log.Fields{"request": searchParams, "response": search}).Debugf("search tweets")
 
 		for _, status := range search.Statuses {
 			if err := validateTweet(client, status); err != nil {
@@ -65,20 +62,16 @@ func Favorite(conf TwitterConfig) error {
 
 func validateTweet(client *twitter.Client, tweet twitter.Tweet) error {
 	if validate.IsValidText(tweet.Text) {
-		log.WithField("tweet", tweet).Info("valid tweet")
 		return nil
 	}
-	log.WithField("tweet", tweet).Info("invalid tweet")
 
-	statusDetail, resp, err := client.Statuses.Show(tweet.ID, &twitter.StatusShowParams{
+	statusDetail, _, err := client.Statuses.Show(tweet.ID, &twitter.StatusShowParams{
 		ID: tweet.ID,
 	})
 	if err != nil {
 		return errors.Wrapf(err, "failed show status. https://twitter.com/_/status/%v", tweet.ID)
 	}
-	log.Debugf("status detail. %+v %+v", statusDetail, resp)
 	if statusDetail.Favorited {
-		log.WithField("tweet", tweet).Info("already favorited")
 		return nil
 	}
 
