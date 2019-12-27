@@ -1,10 +1,19 @@
-.PHONY: run deploy
-
-run:
-	go run main.go
+.PHONY: deploy destroy
 
 deploy:
-	rm -f main handler.zip
-	go build -o main main.go
-	zip handler.zip main
-	aws lambda update-function-code --function-name ${FUNCTION_NAME} --zip-file fileb://${PWD}/handler.zip
+	test -n "${CONSUMER_KEY}" || exit 1
+	test -n "${CONSUMER_SECRET}" || exit 1
+	test -n "${ACCESS_TOKEN}" || exit 1
+	test -n "${ACCESS_SECRET}" || exit 1
+
+	GOOS=linux GOARCH=amd64 go build -trimpath -o main main.go
+	mkdir -p infra/lambda/
+	mv main infra/lambda/
+
+	cd infra &&\
+		npm run build &&\
+		npm run cdk deploy &&\
+		npm run post-deploy
+
+destroy:
+	cd infra && cdk destroy
