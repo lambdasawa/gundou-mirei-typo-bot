@@ -1,0 +1,55 @@
+on:
+  push:
+    branches:
+      - master
+
+name: Deploy
+jobs:
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@master
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "13.12.0"
+
+      - uses: actions/setup-go@v2-beta
+        with:
+          go-version: "1.14.2"
+
+      - name: Run golangci-lint
+        uses: actions-contrib/golangci-lint@v1
+        env:
+          GOROOT: ""
+          GOOS: "linux"
+          GOARCH: "amd64"
+
+      - name: install serverless
+        run: npm i -g serverless@1.67.0
+
+      - name: make deploy
+        run: make deploy
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          CONSUMER_KEY: ${{ secrets.CONSUMER_KEY }}
+          CONSUMER_SECRET: ${{ secrets.CONSUMER_SECRET }}
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          ACCESS_SECRET: ${{ secrets.ACCESS_SECRET }}
+
+      - name: Slack Notification (when success)
+        if: success()
+        uses: rtCamp/action-slack-notify@master
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_URL }}
+          SLACK_COLOR: good
+
+      - name: Slack Notification (when failure)
+        if: failure()
+        uses: rtCamp/action-slack-notify@master
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_URL }}
+          SLACK_COLOR: danger
