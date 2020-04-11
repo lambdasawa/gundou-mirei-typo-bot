@@ -1,0 +1,27 @@
+service: gundou-mirei-typo-bot
+
+frameworkVersion: "=1.67.0"
+
+provider:
+  name: aws
+  runtime: go1.x
+  stage: dev
+  region: ap-northeast-1
+
+package:
+  exclude:
+    - ./**
+  include:
+    - ./bin/**
+
+functions:
+  main:
+    handler: bin/main
+    timeout: 300
+    events:
+      - schedule: rate(5 minutes)
+    environment:
+      CONSUMER_KEY: ${env:CONSUMER_KEY}
+      CONSUMER_SECRET: ${env:CONSUMER_SECRET}
+      ACCESS_TOKEN: ${env:ACCESS_TOKEN}
+      ACCESS_SECRET: ${env:ACCESS_SECRET}
