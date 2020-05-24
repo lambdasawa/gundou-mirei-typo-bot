@@ -5,4 +5,4 @@ deploy:
 	sls deploy
 
 undeploy:
-	sls destroy
+	sls remove
